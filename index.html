@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard Analitik Interaktif: Penjualan Naik, Laba Turun</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f27;--mu:#667085;--bd:#e4e7ec;--pos:#12805c;--neg:#c8372d;--c1:#3b6fd4;--c2:#e0902b;--c3:#8a63d2;--c4:#12805c;--ac:#3b6fd4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1218;--card:#181c25;--tx:#eceff4;--mu:#98a2b3;--bd:#2a303c;--pos:#3ecf9b;--neg:#ff6b5e;--c1:#6b9bf2;--c2:#f0ad54;--c3:#a98af0;--c4:#3ecf9b;--ac:#6b9bf2}}
+:root[data-theme="dark"]{--bg:#0f1218;--card:#181c25;--tx:#eceff4;--mu:#98a2b3;--bd:#2a303c;--pos:#3ecf9b;--neg:#ff6b5e;--c1:#6b9bf2;--c2:#f0ad54;--c3:#a98af0;--c4:#3ecf9b;--ac:#6b9bf2}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:1100px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:22px;margin:0}h2{font-size:15px;margin:0 0 10px}
+.sub{color:var(--mu);font-size:13px;margin:2px 0 14px}
+.g{display:grid;gap:12px}.k{grid-template-columns:repeat(auto-fit,minmax(165px,1fr))}.r2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr));margin-top:12px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.l{color:var(--mu);font-size:12px}.v{font-size:23px;font-weight:650}.d{font-size:12px;font-weight:600}
+.neg{color:var(--neg)}.pos{color:var(--pos)}
+svg{width:100%;height:auto;display:block}svg text{fill:var(--tx);font-size:11px}svg .m{fill:var(--mu)}svg [data-tip]{cursor:pointer;transition:opacity .15s}svg [data-tip]:hover{opacity:.75}
+.sc{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:5px 8px;border-bottom:1px solid var(--bd);text-align:right}th:first-child,td:first-child{text-align:left}th{color:var(--mu);font-weight:600}
+.lg{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.chip{font:inherit;font-size:12px;color:var(--tx);background:transparent;border:1px solid var(--bd);border-radius:99px;padding:3px 10px;cursor:pointer}.chip i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}.chip.off{opacity:.4;text-decoration:line-through}
+.tabs{display:flex;gap:6px;margin:0 0 4px;flex-wrap:wrap;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:6px 0;z-index:5}
+.tab{font:inherit;font-size:14px;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:6px 14px;cursor:pointer}.tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.pg{display:none}.pg.on{display:block}
+ul{margin:0;padding-left:18px}li{margin:5px 0}
+input[type=range]{width:100%}input[type=number]{width:96px;font:inherit;font-size:13px;padding:3px 6px;text-align:right;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:6px}
+.row{display:flex;justify-content:space-between;font-size:13px;margin-top:8px}.big{font-size:30px;font-weight:700}
+.btn{font:inherit;font-size:13px;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:5px 12px;cursor:pointer}.btn:hover{border-color:var(--ac)}
+#tip{position:fixed;pointer-events:none;background:#111;color:#fff;font-size:12px;padding:5px 9px;border-radius:6px;opacity:0;transition:opacity .1s;z-index:9;max-width:220px}
+</style>
+</head>
+<body><div class="w">
+<h1>Penjualan Naik, Laba Turun</h1>
+<div class="sub">Dashboard interaktif toko online. Ubah data, arahkan kursor ke grafik, klik legenda, dan coba skenario strategi. Semua angka dalam Rp juta kecuali disebutkan.</div>
+<div class="g k" id="kpi"></div>
+<div class="tabs" id="tabs"></div>
+
+<div class="pg on" id="p0">
+<div class="g r2" style="margin-top:0">
+<div class="c"><h2>Pendapatan, total biaya, dan laba</h2><div id="bars"></div></div>
+<div class="c"><h2>Jembatan laba (klik batang untuk detail)</h2><div id="wf"></div><div class="l" id="wfn" style="margin-top:6px">Arahkan atau klik batang.</div></div>
+<div class="c"><h2>Struktur biaya (% pendapatan)</h2><div id="st"></div><div class="lg" id="stl"></div></div>
+<div class="c sc"><h2>Unit economics per transaksi (Rp ribu)</h2><div id="tb"></div></div>
+</div></div>
+
+<div class="pg" id="p1"><div class="g r2" style="margin-top:0">
+<div class="c"><h2>Diagnosis penyebab (otomatis dari data)</h2><ul id="dx"></ul></div>
+<div class="c"><h2>Edit data</h2><div class="sc"><table id="ed"></table></div><div style="margin-top:10px"><button class="btn" id="rs">Kembalikan data awal</button></div></div>
+</div></div>
+
+<div class="pg" id="p2"><div class="g r2" style="margin-top:0">
+<div class="c"><h2>Simulator strategi (basis Bulan 2)</h2>
+<div class="lg" id="pre" style="margin:0 0 6px"></div>
+<div class="row"><span>Rasio biaya produk</span><b id="o1"></b></div><input id="s1" type="range" min="50" max="75" step="0.5">
+<div class="row"><span>Biaya promosi (Rp juta)</span><b id="o2"></b></div><input id="s2" type="range" min="0" max="40" step="0.5">
+<div class="row"><span>Nilai per transaksi (Rp ribu)</span><b id="o3"></b></div><input id="s3" type="range" min="80" max="140" step="1">
+<div class="row"><span>Jumlah transaksi</span><b id="o4"></b></div><input id="s4" type="range" min="800" max="2000" step="10">
+<div class="row"><span>Biaya operasional (Rp juta)</span><b id="o5"></b></div><input id="s5" type="range" min="10" max="30" step="0.5">
+</div>
+<div class="c"><h2>Hasil simulasi</h2><div class="l">Proyeksi laba sederhana</div><div class="big" id="sim"></div><div class="l" id="simm"></div><div id="simc" style="margin-top:10px"></div></div>
+</div></div>
+<div id="tip"></div>
+</div>
+<script>
+var $=function(i){return document.getElementById(i)},F=[["t","Jumlah transaksi"],["r","Pendapatan"],["p","Biaya produk"],["m","Biaya promosi"],["o","Biaya operasional"]];
+var D0=[{n:"Bulan 1",t:1000,r:100,p:60,m:10,o:15},{n:"Bulan 2",t:1300,r:130,p:84.5,m:20,o:18}],D=JSON.parse(JSON.stringify(D0)),hid={};
+var f=function(n){return n.toLocaleString("id-ID",{maximumFractionDigits:1})},pc=function(n){return f(n*100)+"%"};
+function cl(x){x.b=x.p+x.m+x.o;x.l=x.r-x.b}
+function kp(l,v,x,y,inv){var ch=x?(y-x)/Math.abs(x):0,g=inv?ch<=0:ch>=0;return '<div class="c"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="d '+(g?"pos":"neg")+'">'+(ch>=0?"▲ ":"▼ ")+f(Math.abs(ch)*100)+'% vs Bulan 1</div></div>'}
+function render(){D.forEach(cl);var a=D[0],b=D[1];
+$("kpi").innerHTML=kp("Transaksi",f(b.t),a.t,b.t)+kp("Pendapatan","Rp"+f(b.r)+" jt",a.r,b.r)+kp("Laba sederhana","Rp"+f(b.l)+" jt",a.l,b.l)+kp("Margin laba",pc(b.l/b.r),a.l/a.r,b.l/b.r)+kp("Nilai per transaksi","Rp"+f(b.r/b.t*1000)+" rb",a.r/a.t,b.r/b.t);
+var s="<svg viewBox='0 0 520 240'>",cs=["var(--c1)","var(--c2)","var(--c4)"],nm=["Pendapatan","Total biaya","Laba"],mx=Math.max(a.r,b.r,1)*1.1;
+D.forEach(function(x,i){var v=[x.r,x.b,x.l],gx=40+i*240;v.forEach(function(y,j){var h=Math.max(y,0)/mx*170,px=gx+j*62;s+="<rect data-tip='"+x.n+" · "+nm[j]+": Rp"+f(y)+" jt ("+pc(y/x.r)+" pendapatan)' x='"+px+"' y='"+(200-h)+"' width='52' height='"+h+"' rx='4' fill='"+cs[j]+"'/><text x='"+(px+26)+"' y='"+(194-h)+"' text-anchor='middle'>"+f(y)+"</text>"});s+="<text x='"+(gx+93)+"' y='222' text-anchor='middle' style='font-weight:600'>"+x.n+" · margin "+pc(x.l/x.r)+"</text>"});
+$("bars").innerHTML=s+"<line x1='20' x2='500' y1='200' y2='200' stroke='var(--bd)'/></svg>"+'<div class="lg">'+nm.map(function(t,j){return '<span class="l"><i style="display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;background:'+cs[j]+'"></i>'+t+'</span>'}).join("")+'</div>';
+var st=[["Laba B1",a.l,0],["Δ Pendapatan",b.r-a.r,1],["Δ Biaya produk",-(b.p-a.p),1],["Δ Promosi",-(b.m-a.m),1],["Δ Operasional",-(b.o-a.o),1],["Laba B2",b.l,0]],run=0,pk=[],w="";
+st.forEach(function(e){var fr,to;if(!e[2]){fr=0;to=e[1];run=e[1]}else{fr=run;to=run+e[1];run=to}pk.push(Math.max(fr,to),Math.min(fr,to,0))});
+var hi=Math.max.apply(0,pk)*1.15||1,lo=Math.min.apply(0,pk),sc=170/(hi-lo),z=15+hi*sc;run=0;
+w="<svg viewBox='0 0 520 250'>";st.forEach(function(e,i){var x=14+i*84,fr,to;if(!e[2]){fr=0;to=e[1];run=e[1]}else{fr=run;to=run+e[1];run=to}
+var top=Math.max(fr,to),bt=Math.min(fr,to),y=z-top*sc,h=Math.max((top-bt)*sc,2),c=!e[2]?"var(--c1)":(e[1]>=0?"var(--c4)":"var(--neg)");
+w+="<rect data-tip='"+e[0]+": "+(e[2]&&e[1]>0?"+":"")+f(e[1])+" jt' data-n='"+e[0]+"|"+e[1]+"|"+e[2]+"' x='"+x+"' y='"+y+"' width='62' height='"+h+"' rx='3' fill='"+c+"'/><text x='"+(x+31)+"' y='"+(y-5)+"' text-anchor='middle'>"+(e[2]&&e[1]>0?"+":"")+f(e[1])+"</text><text class='m' x='"+(x+31)+"' y='238' text-anchor='middle'>"+e[0]+"</text>"});
+$("wf").innerHTML=w+"<line x1='8' x2='512' y1='"+z+"' y2='"+z+"' stroke='var(--bd)'/></svg>";
+var S=[["Biaya produk","p","var(--c1)"],["Promosi","m","var(--c2)"],["Operasional","o","var(--c3)"],["Laba","l","var(--c4)"]],q="<svg viewBox='0 0 520 130'>";
+D.forEach(function(x,i){var y=14+i*60,xx=70;q+="<text x='0' y='"+(y+22)+"'>"+x.n+"</text>";S.forEach(function(e){if(hid[e[1]])return;var v=Math.max(x[e[1]],0),ww=v/x.r*440;q+="<rect data-tip='"+x.n+" · "+e[0]+": Rp"+f(x[e[1]])+" jt ("+pc(x[e[1]]/x.r)+")' x='"+xx+"' y='"+y+"' width='"+ww+"' height='34' fill='"+e[2]+"'/>"+(ww>34?"<text x='"+(xx+ww/2)+"' y='"+(y+21)+"' text-anchor='middle' style='fill:#fff;font-weight:600'>"+f(v/x.r*100)+"%</text>":"");xx+=ww})});
+$("st").innerHTML=q+"</svg>";
+$("stl").innerHTML=S.map(function(e){return '<button class="chip'+(hid[e[1]]?" off":"")+'" data-k="'+e[1]+'"><i style="background:'+e[2]+'"></i>'+e[0]+'</button>'}).join("");
+var R=[["Pendapatan","r"],["Biaya produk","p"],["Promosi","m"],["Operasional","o"],["Laba","l"]],h="<table><tr><th>Komponen</th><th>B1</th><th>B2</th><th>Δ</th></tr>";
+R.forEach(function(r){var u=a[r[1]]/a.t*1000,v=b[r[1]]/b.t*1000,d=v-u,bad=(r[1]=="r"||r[1]=="l")?d<0:d>0;h+="<tr><td>"+r[0]+"</td><td>"+f(u)+"</td><td>"+f(v)+"</td><td class='"+(Math.abs(d)<.05?"":(bad?"neg":"pos"))+"'>"+(d>0?"+":"")+f(d)+"</td></tr>"});$("tb").innerHTML=h+"</table>";
+$("l0").textContent=f(a.l);$("l1").textContent=f(b.l);
+var dt=b.t-a.t,ip=b.m-a.m,ig=(b.r-a.r)-(b.p-a.p),ex=(b.p/b.r-a.p/a.r)*b.r,dx=[];
+dx.push("Pendapatan "+(b.r>=a.r?"naik ":"turun ")+f(Math.abs(b.r/a.r-1)*100)+"%, laba "+(b.l>=a.l?"naik ":"turun ")+f(Math.abs(b.l/a.l-1)*100)+"%. Margin "+pc(a.l/a.r)+" → "+pc(b.l/b.r)+".");
+dx.push("Nilai per transaksi Rp"+f(a.r/a.t*1000)+" rb → Rp"+f(b.r/b.t*1000)+" rb: pertumbuhan "+(Math.abs(b.r/b.t-a.r/a.t)<.001?"murni dari <b>volume</b>.":"dipengaruhi volume dan harga/keranjang."));
+dx.push("<b>Biaya produk</b> "+pc(a.p/a.r)+" → "+pc(b.p/b.r)+" pendapatan"+(ex>0?": kenaikan rasio ini menggerus laba ≈ Rp"+f(ex)+" jt.":"."));
+dx.push("<b>Promosi</b> "+pc(a.m/a.r)+" → "+pc(b.m/b.r)+" pendapatan. "+(dt>0&&ip>0?"Biaya tambahan Rp"+f(ip)+" jt untuk "+f(dt)+" transaksi baru (Rp"+f(ip/dt*1000)+" rb/transaksi) vs laba kotor tambahan Rp"+f(ig)+" jt: <b class='"+(ig-ip<0?"neg":"pos")+"'>"+(ig-ip<0?"rugi":"untung")+" marginal Rp"+f(Math.abs(ig-ip))+" jt</b>.":""));
+dx.push("<b>Operasional</b> Rp"+f(a.o/a.t*1000)+" rb → Rp"+f(b.o/b.t*1000)+" rb per transaksi: "+(b.o/b.t<=a.o/a.t?"efisien, bukan penyebab utama.":"ikut menekan laba."));
+dx.push("Kesimpulan: pertumbuhan yang dibeli lewat promosi mahal dan margin produk menipis membuat laba turun.");
+$("dx").innerHTML=dx.map(function(t){return "<li>"+t+"</li>"}).join("");sm()}
+(function(){var t=["Ringkasan","Penyebab & Data","Simulator"];$("tabs").innerHTML=t.map(function(x,i){return '<button class="tab'+(i?"":" on")+'" data-i="'+i+'">'+x+'</button>'}).join("");
+$("tabs").onclick=function(e){var i=e.target.dataset.i;if(i==null)return;[].forEach.call(document.querySelectorAll(".tab"),function(x,j){x.classList.toggle("on",j==i);$("p"+j).classList.toggle("on",j==i)})};
+var h="<tr><th>Rp juta</th><th>Bulan 1</th><th>Bulan 2</th></tr>";F.forEach(function(r){h+="<tr><td>"+r[1]+"</td>"+[0,1].map(function(i){return "<td><input type='number' step='any' min='0' data-i='"+i+"' data-f='"+r[0]+"' value='"+D[i][r[0]]+"'></td>"}).join("")+"</tr>"});
+$("ed").innerHTML=h+"<tr><td><b>Laba sederhana</b></td><td><b id='l0'></b></td><td><b id='l1'></b></td></tr>";
+$("ed").oninput=function(e){var t=e.target,v=parseFloat(t.value);if(t.dataset.f&&v>=0){D[t.dataset.i][t.dataset.f]=v;render()}};
+$("rs").onclick=function(){D=JSON.parse(JSON.stringify(D0));[].forEach.call($("ed").querySelectorAll("input"),function(x){x.value=D[x.dataset.i][x.dataset.f]});render();pr("b")};
+$("stl").onclick=function(e){var k=e.target.closest("[data-k]");if(!k)return;hid[k.dataset.k]=!hid[k.dataset.k];render()};
+$("wf").onclick=function(e){var n=e.target.dataset.n;if(!n)return;n=n.split("|");var v=+n[1];$("wfn").innerHTML="<b>"+n[0]+"</b>: "+(n[2]=="1"&&v>0?"+":"")+"Rp"+f(v)+" jt. "+(n[2]=="1"?(v>=0?"Menambah laba.":"Mengurangi laba."):"Posisi laba akhir bulan tsb.")};
+var tp=$("tip");document.addEventListener("mousemove",function(e){var t=e.target.closest&&e.target.closest("[data-tip]");if(t){tp.textContent=t.dataset.tip;tp.style.opacity=1;tp.style.left=Math.min(e.clientX+12,innerWidth-230)+"px";tp.style.top=(e.clientY+14)+"px"}else tp.style.opacity=0});
+var P=[["Basis B2","b"],["Promosi 10% pendapatan","pm"],["Biaya produk kembali ke rasio B1","cg"],["Nilai per transaksi +10%","av"],["Kombinasi","all"]];
+$("pre").innerHTML=P.map(function(x){return '<button class="chip" data-p="'+x[1]+'">'+x[0]+'</button>'}).join("");
+$("pre").onclick=function(e){var k=e.target.dataset.p;if(k)pr(k)};
+["s1","s2","s3","s4","s5"].forEach(function(i){$(i).oninput=sm})})();
+function pr(k){var a=D[0],b=D[1],v={c:b.p/b.r*100,m:b.m,v:b.r/b.t*1000,t:b.t,o:b.o};
+if(k=="pm"||k=="all")v.m=b.r*.1;if(k=="cg"||k=="all")v.c=a.p/a.r*100;if(k=="av"||k=="all")v.v*=1.1;
+$("s1").value=v.c;$("s2").value=v.m;$("s3").value=v.v;$("s4").value=v.t;$("s5").value=v.o;sm()}
+function sm(){var a=D[0],b=D[1],c=+$("s1").value/100,m=+$("s2").value,av=+$("s3").value,t=+$("s4").value,o=+$("s5").value,rev=t*av/1000,l=rev-rev*c-m-o;
+$("o1").textContent=f(c*100)+"%";$("o2").textContent="Rp"+f(m)+" jt";$("o3").textContent="Rp"+f(av)+" rb";$("o4").textContent=f(t);$("o5").textContent="Rp"+f(o)+" jt";
+$("sim").textContent="Rp"+f(l)+" jt";$("sim").className="big "+(l>=a.l?"pos":(l<b.l?"neg":""));
+$("simm").textContent="Pendapatan Rp"+f(rev)+" jt · margin "+pc(rev?l/rev:0)+" · "+(l>=a.l?"melampaui laba Bulan 1":"di bawah laba Bulan 1 (Rp"+f(a.l)+" jt)");
+var vs=[["Bulan 1",a.l,"var(--c1)"],["Bulan 2",b.l,"var(--c2)"],["Simulasi",l,l>=a.l?"var(--c4)":"var(--neg)"]],mx=Math.max(a.l,b.l,l,1)*1.2,s="<svg viewBox='0 0 520 150'>";
+vs.forEach(function(x,i){var w=Math.max(x[1],0)/mx*380;s+="<text x='0' y='"+(i*46+28)+"'>"+x[0]+"</text><rect data-tip='"+x[0]+": Rp"+f(x[1])+" jt' x='70' y='"+(i*46+8)+"' width='"+w+"' height='30' rx='4' fill='"+x[2]+"'/><text x='"+(76+w)+"' y='"+(i*46+28)+"'>"+f(x[1])+"</text>"});
+$("simc").innerHTML=s+"</svg>"}
+render();pr("b");
+</script>
+</body></html>
